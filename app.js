@@ -20,9 +20,13 @@ var config = {
     },
 }
 
-const options = {
-  key: fs.readFileSync('./keys/private_key.pem','utf8'),
-  cert: fs.readFileSync('./keys/private_crt.pem','utf8')
+/*const options = {
+  key: fs.readFileSync('./keys/innovation.kfsco.com_key.pem','utf8'),
+  cert: fs.readFileSync('./keys/innovation.kfsco.com_cert.pem','utf8')
+};*/
+const options ={
+  pfx: fs.readFileSync('./keys/innovation.kfsco.com.pfx'),
+  passphrase: 'kfscocom' //비밀번호
 };
 
 
