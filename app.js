@@ -24,18 +24,18 @@ var config = {
   key: fs.readFileSync('./keys/innovation.kfsco.com_key.pem','utf8'),
   cert: fs.readFileSync('./keys/innovation.kfsco.com_cert.pem','utf8')
 };*/
-const options ={
+/*const options ={
   pfx: fs.readFileSync('./keys/innovation.kfsco.com.pfx'),
   passphrase: 'kfscocom' //비밀번호
-};
+};*/
 
 
-https.createServer(options, app).listen(port2, function(){
+/*https.createServer(options, app).listen(port2, function(){
   console.log("start! REST API HTTPS server on port " + port2);
-});
-// app.listen(port2,function(){
-//   console.log("start! REST API HTTP server on port "+port2);
-// });
+});*/
+ app.listen(port2,function(){
+   console.log("start! REST API HTTP server on port "+port2);
+ });
 app.use(express.static(__dirname + '/public'));
 app.set('view engine','ejs');
 
@@ -117,6 +117,33 @@ app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvr
        })
   });
 })
+
+//난수 마지막에 G
+app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfG=:id&VEH_NAME=:id1' ,function(req,res){
+  var result;
+  var urlpram = req.params.id; //url의 :id를 가져온다
+  var urlpram1 = req.params.id1; //url의 :id를 가져온다
+  sql.connect(config, err => {
+      // ... error checks
+     if(err){
+       console.log(err);
+     }
+       //일반쿼리 사용법
+       new sql.Request()
+       .input('bknm',sql.NVarChar, urlpram)
+       .input('bknm1',sql.NVarChar, urlpram1)
+       .query("select VEH_NAME, COORD_X, COORD_Y, TRACE_DATE, POSI_ADDR from VEH_TRACE where TRACE_DATE BETWEEN @bknm+' '+'00:00:00' and @bknm+' '+'23:59:59' and VEH_NAME = @bknm1", (err, result) => {
+         // ... error checks
+         if(err){
+           return res.json(err)
+         }else{
+              return res.json(result.recordset);
+         }
+     })
+  });
+})
+
+
 
 app.post('/api/test',function(req, res){
   res.send('성공');
