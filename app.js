@@ -7,6 +7,9 @@ const fs = require('fs');
 var port2 = 1750;
 var dbresult = [];
 
+//JSON Request
+const request_url = require('request');
+
 //MS-SQL 쓰는거
 var sql = require('mssql');
 var config = {
@@ -39,9 +42,74 @@ var config = {
 app.use(express.static(__dirname + '/public'));
 app.set('view engine','ejs');
 
+//파일보내기
 app.get('/',function(req,res){
   res.sendFile(__dirname + "/public/main.html");
 });
+//값을 받아서 url주소를 만들어서 데이터 베이스에 저장시킬꺼임
+app.get('/taewon=:id',function(req,res){
+  var urlpram = req.params.id;
+  var BkBrnCd,BrnNm, BkBrnNo, BankNm, BrnLocNm, Rk2, Longitude, Latitude;
+   var url = 'https://innovation.kfsco.com:1750/'+urlpram;
+  request_url(url,function(error,response,body){
+    if(!error && response.statusCode == 200){
+      obj = JSON.parse(body);
+      console.log(obj.length-1);
+      for(var i=0;i<=obj.length-1;i++){
+          taewon(obj[i].BkBrnCd,obj[i].BrnNm,obj[i].BkBrnNo,obj[i].BankNm,obj[i].BrnLocNm,obj[i].Rk2,obj[i].Longitude, obj[i].Latitude);
+      }
+    }else{
+      console.log(error);
+    }
+  });
+  return res.json("저장완료");
+  //res.render("testPage.ejs",{})
+});
+//mssql 돌아가는거 함수로 빼놓기 난수+A만
+function taewon(a,b,c,d,e,f,g,h){
+    sql.connect(config, err => {
+      // ... error checks
+     if(err){
+       console.log(err);
+     }
+       //일반쿼리 사용법
+       new sql.Request()
+       .input('BkBrnCd',sql.NVarChar,a)
+       .input('BrnNm',sql.NVarChar,b)
+       .input('BkBrnNo',sql.NVarChar,c)
+       .input('BankNm',sql.NVarChar,d)
+       .input('BrnLocNm',sql.NVarChar, e)
+       //.input('Rk2',sql.NVarChar, f)
+       .input('Longitude',sql.NVarChar, g)
+       .input('Latitude',sql.NVarChar, h)
+       //Rk2를 뺀이유 데이터값이 많으면 몇개씩 자꾸빠짐 딜레이를 걸거나 빼거나
+       .query("INSERT INTO Taewon2 (BkBrnCd, BrnNm, BkBrnNo, BankNm, BrnLocNm, Longitude, Latitude) VALUES (@BkBrnCd,@BrnNm,@BkBrnNo,@BankNm,@BrnLocNm,@Longitude,@Latitude)", (err, result) => {
+         // ... error checks
+        /* if(err){
+           return res.json(err);
+         }else{
+           return res.json("성공");
+         }*/
+     })
+  });
+  
+}
+app.post('/taewon',function(req,res){
+ console.log(req.body);
+})
+//URL로 JSON 값 가져오기 주석풀고 쓸것
+  // let url = 'https://innovation.kfsco.com:1750/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfC=KFS';
+  // request_url(url,function(error,response,body){
+  //   if(!error && response.statusCode == 200){
+  //     obj = JSON.parse(body);
+  //     for(var i=0;i<=obj.length-1;i++){
+  //       console.log(obj[i].BankNm+","+obj[i].BrnNm+","+obj[i].Rk2);
+  //     }
+  //   }else{
+  //     console.log("여긴안됨");
+  //   }
+  // });
+
 
 //경로 난수 마지막에 C
 app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfC=:id',function(req,res){
@@ -119,7 +187,7 @@ app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvr
 })
 
 //난수 마지막에 G
-app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfG=:id&VEH_NAME=:id1' ,function(req,res){
+app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfG&DlvDt=:id&VEH_NAME=:id1' ,function(req,res){
   var result;
   var urlpram = req.params.id; //url의 :id를 가져온다
   var urlpram1 = req.params.id1; //url의 :id를 가져온다
@@ -130,9 +198,9 @@ app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvr
      }
        //일반쿼리 사용법
        new sql.Request()
-       .input('bknm',sql.NVarChar, urlpram)
-       .input('bknm1',sql.NVarChar, urlpram1)
-       .query("select VEH_NAME, COORD_X, COORD_Y, TRACE_DATE, POSI_ADDR from VEH_TRACE where TRACE_DATE BETWEEN @bknm+' '+'00:00:00' and @bknm+' '+'23:59:59' and VEH_NAME = @bknm1", (err, result) => {
+       .input('DlvDt',sql.NVarChar, urlpram)
+       .input('VEHNAME',sql.NVarChar, urlpram1)
+       .query("select VEH_NAME, COORD_X, COORD_Y, TRACE_DATE, POSI_ADDR from VEH_TRACE where TRACE_DATE BETWEEN @DlvDt+' '+'00:00:00' and @DlvDt+' '+'23:59:59' and VEH_NAME = @VEHNAME", (err, result) => {
          // ... error checks
          if(err){
            return res.json(err)
@@ -143,6 +211,55 @@ app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvr
   });
 })
 
+//경로 난수 마지막에 H
+app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfH=:id',function(req,res){
+  var result;
+  var urlpram = req.params.id; //url의 :id를 가져온다
+  sql.connect(config, err => {
+      // ... error checks
+     if(err){
+       console.log(err);
+     }
+     // 저장프로시저 사용법
+     new sql.Request()
+       .input('DlvDt', sql.NVarChar(30), urlpram)
+       .execute('SP_Get_WorkPlan', (err, result) => {
+           // ... error checks
+           if(err){
+             return res.json(err);
+           }else{
+             return res.json(result.recordset)
+           }
+       })
+  });
+})
+
+//난수 마지막에 I 현재시간 30분전 ~ 현재시간 차량 경로 조회
+app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfI' ,function(req,res){
+  var result;
+ // var urlpram = req.params.id; //url의 :id를 가져온다
+  sql.connect(config, err => {
+      // ... error checks
+     if(err){
+       console.log(err);
+     }
+       //일반쿼리 사용법
+       new sql.Request()
+       //.input('bknm',sql.NVarChar, urlpram)
+       .query("select VEH_NAME, TRACE_DATE, COORD_X, COORD_Y from VEH_TRACE where TRACE_DATE > DATEADD(MI,-30,GETDATE())", (err, result) => {
+         // ... error checks
+         if(err){
+           return res.json(err)
+         }else{
+           var data = result.recordset.length;
+           if(data != 0){
+              return res.json(result.recordset)
+            }
+              return res.json(false)
+         }
+     })
+  });
+})
 
 
 app.post('/api/test',function(req, res){
