@@ -48,25 +48,32 @@ app.get('/',function(req,res){
 });
 //값을 받아서 url주소를 만들어서 데이터 베이스에 저장시킬꺼임
 app.get('/taewon=:id',function(req,res){
+  var now = new Date();
+  var nowTime = now.getFullYear() +"년"+ (now.getMonth()+1)+"월"+ now.getDate() +"일"+ now.getHours() +"시" + now.getMinutes() +"분"+ now.getSeconds() +"초"
   var urlpram = req.params.id;
-  var BkBrnCd,BrnNm, BkBrnNo, BankNm, BrnLocNm, Rk2, Longitude, Latitude;
-   var url = 'https://innovation.kfsco.com:1750/'+urlpram;
+              //여기부분이 도메인 입력하고          //값받아서 API접근후 데이터 베이스 저장
+  var url = 'https://innovation.kfsco.com:1750/'+urlpram
+  url = encodeURI(url);   //인코딩을 해줘야 한글값도 잘들어감
+  //console.log(url);
   request_url(url,function(error,response,body){
     if(!error && response.statusCode == 200){
       obj = JSON.parse(body);
-      console.log(obj.length-1);
+      console.log(obj.length+"개//"+nowTime);//들어온 값의 개수
       for(var i=0;i<=obj.length-1;i++){
           taewon(obj[i].BkBrnCd,obj[i].BrnNm,obj[i].BkBrnNo,obj[i].BankNm,obj[i].BrnLocNm,obj[i].Rk2,obj[i].Longitude, obj[i].Latitude);
       }
+      console.log()
+      return res.json("저장완료");
     }else{
       console.log(error);
+      return res.json("저장실패");
     }
   });
-  return res.json("저장완료");
   //res.render("testPage.ejs",{})
 });
 //mssql 돌아가는거 함수로 빼놓기 난수+A만
-function taewon(a,b,c,d,e,f,g,h){
+function taewon(BkBrnCd,BrnNm,BkBrnNo,BankNm,BrnLocNm,Rk2,Longitude,Latitude){
+    //console.log(BkBrnCd+","+BrnNm+","+BkBrnNo+","+BankNm+","+BrnLocNm+","+Rk2+","+Longitude+","+Latitude);
     sql.connect(config, err => {
       // ... error checks
      if(err){
@@ -74,25 +81,23 @@ function taewon(a,b,c,d,e,f,g,h){
      }
        //일반쿼리 사용법
        new sql.Request()
-       .input('BkBrnCd',sql.NVarChar,a)
-       .input('BrnNm',sql.NVarChar,b)
-       .input('BkBrnNo',sql.NVarChar,c)
-       .input('BankNm',sql.NVarChar,d)
-       .input('BrnLocNm',sql.NVarChar, e)
-       //.input('Rk2',sql.NVarChar, f)
-       .input('Longitude',sql.NVarChar, g)
-       .input('Latitude',sql.NVarChar, h)
-       //Rk2를 뺀이유 데이터값이 많으면 몇개씩 자꾸빠짐 딜레이를 걸거나 빼거나
-       .query("INSERT INTO Taewon2 (BkBrnCd, BrnNm, BkBrnNo, BankNm, BrnLocNm, Longitude, Latitude) VALUES (@BkBrnCd,@BrnNm,@BkBrnNo,@BankNm,@BrnLocNm,@Longitude,@Latitude)", (err, result) => {
-         // ... error checks
-        /* if(err){
-           return res.json(err);
+       .input('BkBrnCd',sql.NVarChar,BkBrnCd)
+       .input('BrnNm',sql.NVarChar,BrnNm)
+       .input('BkBrnNo',sql.NVarChar,BkBrnNo)
+       .input('BankNm',sql.NVarChar,BankNm)
+       .input('BrnLocNm',sql.NVarChar, BrnLocNm)
+       .input('Rk2',sql.NVarChar, Rk2)
+       .input('Longitude',sql.NVarChar,Longitude)
+       .input('Latitude',sql.NVarChar, Latitude)
+       //BkBrnCd가 중복되면 새로 들어온 값으로 update 중복아닐시 insert
+       .execute('SP_Get_RESTA2', (err, result) => {
+         if(err){
+           console.log(err);
          }else{
-           return res.json("성공");
-         }*/
+           // console.log(result.recordset);
+         }
      })
   });
-  
 }
 app.post('/taewon',function(req,res){
  console.log(req.body);
@@ -273,3 +278,4 @@ app.post('/api/post/test',function(req, res){
 app.use(function(req, res, next){
   res.sendFile(__dirname+"/public/errorPage.html");
 });
+
