@@ -49,7 +49,7 @@ app.get('/',function(req,res){
 //값을 받아서 url주소를 만들어서 데이터 베이스에 저장시킬꺼임
 app.get('/taewon=:id',function(req,res){
   var now = new Date();
-  var nowTime = now.getFullYear() +"년"+ (now.getMonth()+1)+"월"+ now.getDate() +"일"+ now.getHours() +"시" + now.getMinutes() +"분"+ now.getSeconds() +"초"
+  var nowTime = now.getFullYear() +"년"+ (now.getMonth()+1)+"월"+ now.getDate() +"일"+ now.getHours() +":" + now.getMinutes() +":"+ now.getSeconds()
   var urlpram = req.params.id;
               //여기부분이 도메인 입력하고          //값받아서 API접근후 데이터 베이스 저장
   var url = 'https://innovation.kfsco.com:1750/'+urlpram
@@ -62,8 +62,7 @@ app.get('/taewon=:id',function(req,res){
       for(var i=0;i<=obj.length-1;i++){
           taewon(obj[i].BkBrnCd,obj[i].BrnNm,obj[i].BkBrnNo,obj[i].BankNm,obj[i].BrnLocNm,obj[i].Rk2,obj[i].Longitude, obj[i].Latitude);
       }
-      console.log()
-      return res.json("저장완료");
+      return res.json(obj.length+"개 저장완료");
     }else{
       console.log(error);
       return res.json("저장실패");
@@ -91,11 +90,11 @@ function taewon(BkBrnCd,BrnNm,BkBrnNo,BankNm,BrnLocNm,Rk2,Longitude,Latitude){
        .input('Latitude',sql.NVarChar, Latitude)
        //BkBrnCd가 중복되면 새로 들어온 값으로 update 중복아닐시 insert
        .execute('SP_Get_RESTA2', (err, result) => {
-         if(err){
+          /*if(err){
            console.log(err);
          }else{
-           // console.log(result.recordset);
-         }
+            console.log(result.recordset);
+         }*/
      })
   });
 }
