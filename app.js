@@ -58,9 +58,12 @@ app.get('/taewon=:id',function(req,res){
   request_url(url,function(error,response,body){
     if(!error && response.statusCode == 200){
       obj = JSON.parse(body);
+      if(obj[0].Seq==null&&obj[0].DlvDt==null){
+        return res.json("저장실패");
+      } 
       console.log(obj.length+"개//"+nowTime);//들어온 값의 개수
       for(var i=0;i<=obj.length-1;i++){
-          taewon(obj[i].BkBrnCd,obj[i].BrnNm,obj[i].BkBrnNo,obj[i].BankNm,obj[i].BrnLocNm,obj[i].Rk2,obj[i].Longitude, obj[i].Latitude);
+          taewon(obj[i].DlvDt,obj[i].Seq,obj[i].ConvTeamCd,obj[i].NatCarNo,obj[i].SendBkCd,obj[i].StTm,obj[i].RecvBkCd, obj[i].EdTm, obj[i].ConvTp, obj[i].ConvTpNm, obj[i].rk);
       }
       return res.json(obj.length+"개 저장완료");
     }else{
@@ -71,7 +74,7 @@ app.get('/taewon=:id',function(req,res){
   //res.render("testPage.ejs",{})
 });
 //mssql 돌아가는거 함수로 빼놓기 난수+A만
-function taewon(BkBrnCd,BrnNm,BkBrnNo,BankNm,BrnLocNm,Rk2,Longitude,Latitude){
+function taewon(DlvDt,Seq,ConvTeamCd,NatCarNo,SendBkCd,StTm,RecvBkCd,EdTm,ConvTp,ConvTpNm,rk){
     //console.log(BkBrnCd+","+BrnNm+","+BkBrnNo+","+BankNm+","+BrnLocNm+","+Rk2+","+Longitude+","+Latitude);
     sql.connect(config, err => {
       // ... error checks
@@ -80,15 +83,17 @@ function taewon(BkBrnCd,BrnNm,BkBrnNo,BankNm,BrnLocNm,Rk2,Longitude,Latitude){
      }
        //일반쿼리 사용법
        new sql.Request()
-       .input('BkBrnCd',sql.NVarChar,BkBrnCd)
-       .input('BrnNm',sql.NVarChar,BrnNm)
-       .input('BkBrnNo',sql.NVarChar,BkBrnNo)
-       .input('BankNm',sql.NVarChar,BankNm)
-       .input('BrnLocNm',sql.NVarChar, BrnLocNm)
-       .input('Rk2',sql.NVarChar, Rk2)
-       .input('Longitude',sql.NVarChar,Longitude)
-       .input('Latitude',sql.NVarChar, Latitude)
-       //BkBrnCd가 중복되면 새로 들어온 값으로 update 중복아닐시 insert
+       .input('DlvDt',sql.NVarChar,DlvDt)
+       .input('Seq',sql.NVarChar,Seq)
+       .input('ConvTeamCd',sql.NVarChar,ConvTeamCd)
+       .input('NatCarNo',sql.NVarChar,NatCarNo)
+       .input('SendBkCd',sql.NVarChar, SendBkCd)
+       .input('StTm',sql.NVarChar, StTm)
+       .input('RecvBkCd',sql.NVarChar,RecvBkCd)
+       .input('EdTm',sql.NVarChar, EdTm)
+       .input('ConvTp',sql.NVarChar, ConvTp)
+       .input('ConvTpNm',sql.NVarChar, ConvTpNm)
+       .input('rk',sql.NVarChar, rk)
        .execute('SP_Get_RESTA2', (err, result) => {
           /*if(err){
            console.log(err);
@@ -115,7 +120,7 @@ app.post('/taewon',function(req,res){
   // });
 
 
-//경로 난수 마지막에 C
+//경로 난수 마지막에 C      거래처 은행별 조회
 app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfC=:id',function(req,res){
   var result;
   var urlpram = req.params.id; //url의 :id를 가져온다
@@ -138,8 +143,8 @@ app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvr
   });
 })
 
-//난수 마지막에 D
-app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfD=:id' ,function(req,res){
+//난수 마지막에 D     은행명 조회
+app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfD' ,function(req,res){
   var result;
   var urlpram = req.params.id; //url의 :id를 가져온다
   sql.connect(config, err => {
@@ -149,25 +154,20 @@ app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvr
      }
        //일반쿼리 사용법
        new sql.Request()
-       .input('bknm',sql.NVarChar, urlpram)
-       .query("select * from  KFS_ERP.kfs_data.dbo.CBankMR where BkNm = @bknm", (err, result) => {
+       .query("select BkNm from  KFS_ERP.kfs_data.dbo.CBankMR", (err, result) => {
          // ... error checks
          if(err){
            return res.json(err)
          }else{
-           var data = result.recordset.length;
-           if(data != 0){
-              //데이터값 html로 옮기고 싶을때 ejs랑 이거 써서 옮길수있음
-              //res.render('testPage.ejs',{'test' : result.recordset[0].BkNm,'test1' : result.recordset[0].BkCd})
-              return res.json(true)
-            }
-              return res.json(false)
+          //데이터값 html로 옮기고 싶을때 ejs랑 이거 써서 옮길수있음
+          //res.render('testPage.ejs',{'test' : result.recordset[0].BkNm,'test1' : result.recordset[0].BkCd})
+          return res.json(result.recordset)
          }
      })
   });
 })
 
-//경로 난수 마지막에 F
+//경로 난수 마지막에 F    담당자 조회
 app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfF',function(req,res){
   var result;
   var urlpram = req.params.id; //url의 :id를 가져온다
@@ -190,7 +190,7 @@ app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvr
   });
 })
 
-//난수 마지막에 G
+//난수 마지막에 G     차량의 하루 위도경도 조회
 app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfG&DlvDt=:id&VEH_NAME=:id1' ,function(req,res){
   var result;
   var urlpram = req.params.id; //url의 :id를 가져온다
@@ -215,7 +215,7 @@ app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvr
   });
 })
 
-//경로 난수 마지막에 H
+//경로 난수 마지막에 H    일일 업무계획조회
 app.get('/PRHwz6V8nHDCklqx2FTUqzOL4af0yBxA7Eu6bIHHgNvcNrOLLCw7WXZgTXo9IjSVxMyRvrMLT4saTsqGUrQmhZpo8Jj1CDu6yNfH=:id',function(req,res){
   var result;
   var urlpram = req.params.id; //url의 :id를 가져온다
