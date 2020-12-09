@@ -17,6 +17,7 @@ var config = {
     password: 'renew@dbo@1249',
     server: '218.146.65.32', // You can use 'localhost\\instance' to connect to named instance
     database: 'KFSTMS',
+    requestTimeout: 100000,   //요청시간이 길어지면 저 시간이되면 끊어짐 Defalut : 15000 현재는 100초임
     options:{
       encrypt:false,
       enableArithAbort:true,
@@ -46,7 +47,7 @@ app.set('view engine','ejs');
 app.get('/',function(req,res){
   res.sendFile(__dirname + "/public/main.html");
 });
-//값을 받아서 url주소를 만들어서 데이터 베이스에 저장시킬꺼임
+//값을 받아서 url주소를 만들어서 데이터 베이스에 저장시킬꺼임 **많은값을 저장시키거나 변경하려고하면 하다가 중간에 멈춰버림 update는 2000개 insert는 5000개정도
 app.get('/taewon=:id',function(req,res){
   var now = new Date();
   var nowTime = now.getFullYear() +"년"+ (now.getMonth()+1)+"월"+ now.getDate() +"일"+ now.getHours() +":" + now.getMinutes() +":"+ now.getSeconds()
