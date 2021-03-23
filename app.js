@@ -13,10 +13,10 @@ const request_url = require('request');
 //MS-SQL 쓰는거
 var sql = require('mssql');
 var config = {
-    user: 'sa',
-    password: 'renew@dbo@1249',
-    server: '218.146.65.32', // You can use 'localhost\\instance' to connect to named instance
-    database: 'KFSTMS',
+    user: 'ID',
+    password: 'PASSWORD',
+    server: 'HOST', // You can use 'localhost\\instance' to connect to named instance
+    database: '데이터베이스이름',
     requestTimeout: 100000,   //요청시간이 길어지면 저 시간이되면 끊어짐 Defalut : 15000 현재는 100초임
     options:{
       encrypt:false,
