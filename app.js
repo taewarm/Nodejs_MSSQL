@@ -9,14 +9,14 @@ var dbresult = [];
 
 //JSON Request
 const request_url = require('request');
-
+const msdata = require('./key.js');
 //MS-SQL 쓰는거
 var sql = require('mssql');
 var config = {
-    user: 'sa',
-    password: 'renew@dbo@1249',
-    server: '218.146.65.32', // You can use 'localhost\\instance' to connect to named instance
-    database: 'KFSTMS',
+    user: msdata.msID,
+    password: msdata.msPassWord,
+    server: msdata.msServer, // You can use 'localhost\\instance' to connect to named instance
+    database: msdata.msDataBase,
     requestTimeout: 100000,   //요청시간이 길어지면 저 시간이되면 끊어짐 Defalut : 15000 현재는 100초임
     options:{
       encrypt:false,
